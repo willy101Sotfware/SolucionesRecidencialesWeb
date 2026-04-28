@@ -1,3 +1,5 @@
+import { QuotationItemResponse, CreateQuotationItemRequest } from './quotation-item.model';
+
 export interface QuotationResponse {
   id: number;
   numero: string;
@@ -22,6 +24,7 @@ export interface QuotationResponse {
   showPlazo: number;
   garantia?: string;
   showGarantia: number;
+  quotationItems?: QuotationItemResponse[];
 }
 
 export interface CreateQuotationRequest {
