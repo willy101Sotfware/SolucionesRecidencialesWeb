@@ -233,35 +233,54 @@ import { QuotationService } from '../../services/quotation.service';
       <!-- Modal para Item Avanzado -->
       <div class="modal-overlay" *ngIf="showAdvancedItemModal" (click)="showAdvancedItemModal = false">
         <div class="modal-content" (click)="$event.stopPropagation()">
-          <h3>Agregar Ítem Avanzado</h3>
+          <h3>AGREGAR ÍTEM DE OBRA</h3>
           <div class="modal-form">
+            <!-- Descripción -->
             <div class="form-group">
-              <label>Descripción *</label>
-              <textarea [(ngModel)]="advancedItem.descripcion" rows="3"></textarea>
+              <label>Descripción del Ítem *</label>
+              <textarea [(ngModel)]="advancedItem.descripcion" rows="4" placeholder="Descripción detallada del ítem..."></textarea>
             </div>
+
+            <!-- Cantidad y Unidad de Medida -->
             <div class="form-row">
-              <div class="form-group">
+              <div class="form-group small">
                 <label>Cantidad</label>
-                <input type="number" [(ngModel)]="advancedItem.cantidad" step="0.01" />
+                <input type="number" [(ngModel)]="advancedItem.cantidad" (ngModelChange)="calcularValorTotalItem()" step="0.01" placeholder="0" />
               </div>
-              <div class="form-group">
+              <div class="form-group flex-1">
                 <label>Unidad de Medida</label>
-                <input type="text" [(ngModel)]="advancedItem.unidadMedida" placeholder="Ej: m², und, gl" />
+                <select [(ngModel)]="advancedItem.unidadMedida">
+                  <option value="">Seleccione...</option>
+                  <option *ngFor="let unidad of unidadesMedida" [value]="unidad" *ngIf="unidad">{{ unidad }}</option>
+                </select>
               </div>
             </div>
+
+            <!-- Valores -->
             <div class="form-row">
               <div class="form-group">
-                <label>Valor Unitario</label>
-                <input type="number" [(ngModel)]="advancedItem.valorUnitario" />
+                <label>Valor Unitario ($)</label>
+                <input type="number" [(ngModel)]="advancedItem.valorUnitario" (ngModelChange)="calcularValorTotalItem()" placeholder="0" />
               </div>
               <div class="form-group">
-                <label>Valor Total</label>
-                <input type="number" [(ngModel)]="advancedItem.valorTotal" />
+                <label>Valor Total ($)</label>
+                <input type="number" [(ngModel)]="advancedItem.valorTotal" readonly class="readonly-input" />
               </div>
             </div>
+
+            <!-- Imagen -->
             <div class="form-group">
-              <label>Imagen (URL)</label>
-              <input type="text" [(ngModel)]="advancedItem.imagen" placeholder="https://..." />
+              <label>Imagen (Opcional)</label>
+              <div class="image-upload-section">
+                <input type="file" accept="image/*" (change)="onImageSelected($event)" #fileInput style="display: none" />
+                <button type="button" class="btn btn-image" (click)="fileInput.click()">
+                  📷 Seleccionar Imagen
+                </button>
+                <div class="image-preview" *ngIf="advancedItem.imagen">
+                  <img [src]="advancedItem.imagen" alt="Preview" />
+                  <button type="button" class="btn-remove-image" (click)="advancedItem.imagen = undefined">✕</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="modal-actions">
@@ -340,10 +359,20 @@ import { QuotationService } from '../../services/quotation.service';
     .date-display { padding: 10px; background: #f7fafc; border-radius: 6px; color: #4a5568; font-weight: 500; }
     
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-content { background: white; border-radius: 12px; padding: 25px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-    .modal-content h3 { margin: 0 0 20px 0; color: #1e3a5f; }
+    .modal-content { background: white; border-radius: 12px; padding: 25px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+    .modal-content h3 { margin: 0 0 20px 0; color: #1e3a5f; font-size: 1.2rem; text-align: center; }
     .modal-form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    
+    .form-group.small { flex: 0 0 120px; }
+    .form-group.flex-1 { flex: 1; }
+    .readonly-input { background: #f7fafc; cursor: not-allowed; }
+    
+    .image-upload-section { display: flex; flex-direction: column; gap: 10px; }
+    .btn-image { background: #5856D6; color: white; align-self: flex-start; }
+    .image-preview { position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; }
+    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-remove-image { position: absolute; top: 5px; right: 5px; background: rgba(255,69,58,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
     
     @media (max-width: 1024px) {
       .form-layout { grid-template-columns: 1fr; }
@@ -369,6 +398,39 @@ export class QuotationFormComponent implements OnInit {
   newItemText = '';
   showAdvancedItemModal = false;
   advancedItem: Partial<QuotationItemResponse> = {};
+  
+  // Unidades de medida (del WPF)
+  unidadesMedida = [
+    '',
+    'unidad(es)',
+    'm²',
+    'm³',
+    'm',
+    'cm',
+    'mm',
+    'kg',
+    'ton',
+    'lt',
+    'gal',
+    'bulto(s)',
+    'caja(s)',
+    'paquete(s)',
+    'rollo(s)',
+    'placa(s)',
+    'tablero(s)',
+    'puerta(s)',
+    'ventana(s)',
+    'pieza(s)',
+    'lote(s)',
+    'obra(s)',
+    'servicio(s)',
+    'hora(s)',
+    'día(s)',
+    'mes(es)',
+    'km',
+    'ft',
+    'yd'
+  ];
   
   // Cálculos financieros
   porcentajeUtilidad = 0.06; // 6%
@@ -493,7 +555,10 @@ export class QuotationFormComponent implements OnInit {
   }
 
   addAdvancedItem(): void {
-    if (!this.advancedItem.descripcion?.trim()) return;
+    if (!this.advancedItem.descripcion?.trim()) {
+      alert('Debe ingresar la descripción del ítem.');
+      return;
+    }
 
     this.items.push({
       id: 0,
@@ -510,6 +575,28 @@ export class QuotationFormComponent implements OnInit {
     this.showAdvancedItemModal = false;
     this.recalcularValorObra();
     this.cdr.detectChanges();
+  }
+
+  // Calcular valor total automáticamente
+  calcularValorTotalItem(): void {
+    if (this.advancedItem.cantidad && this.advancedItem.valorUnitario) {
+      this.advancedItem.valorTotal = this.advancedItem.cantidad * this.advancedItem.valorUnitario;
+    } else {
+      delete this.advancedItem.valorTotal;
+    }
+  }
+
+  // Seleccionar imagen desde archivo
+  onImageSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.advancedItem.imagen = e.target.result;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   removeItem(index: number): void {
