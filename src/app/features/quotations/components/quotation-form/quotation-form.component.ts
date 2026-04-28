@@ -245,13 +245,13 @@ import { QuotationService } from '../../services/quotation.service';
             <div class="form-row">
               <div class="form-group small">
                 <label>Cantidad</label>
-                <input type="number" [(ngModel)]="advancedItem.cantidad" (ngModelChange)="calcularValorTotalItem()" step="0.01" placeholder="0" />
+                <input type="number" [(ngModel)]="advancedItem.cantidad" (input)="calcularValorTotalItem()" step="0.01" placeholder="0" />
               </div>
               <div class="form-group flex-1">
                 <label>Unidad de Medida</label>
                 <select [(ngModel)]="advancedItem.unidadMedida">
                   <option value="">Seleccione...</option>
-                  <option *ngFor="let unidad of unidadesMedida" [value]="unidad" *ngIf="unidad">{{ unidad }}</option>
+                  <option *ngFor="let unidad of unidadesMedida" [value]="unidad">{{ unidad }}</option>
                 </select>
               </div>
             </div>
@@ -260,7 +260,7 @@ import { QuotationService } from '../../services/quotation.service';
             <div class="form-row">
               <div class="form-group">
                 <label>Valor Unitario ($)</label>
-                <input type="number" [(ngModel)]="advancedItem.valorUnitario" (ngModelChange)="calcularValorTotalItem()" placeholder="0" />
+                <input type="number" [(ngModel)]="advancedItem.valorUnitario" (input)="calcularValorTotalItem()" placeholder="0" />
               </div>
               <div class="form-group">
                 <label>Valor Total ($)</label>
@@ -579,8 +579,11 @@ export class QuotationFormComponent implements OnInit {
 
   // Calcular valor total automáticamente
   calcularValorTotalItem(): void {
-    if (this.advancedItem.cantidad && this.advancedItem.valorUnitario) {
-      this.advancedItem.valorTotal = this.advancedItem.cantidad * this.advancedItem.valorUnitario;
+    const cantidad = Number(this.advancedItem.cantidad) || 0;
+    const valorUnitario = Number(this.advancedItem.valorUnitario) || 0;
+    
+    if (cantidad > 0 && valorUnitario > 0) {
+      this.advancedItem.valorTotal = cantidad * valorUnitario;
     } else {
       delete this.advancedItem.valorTotal;
     }
