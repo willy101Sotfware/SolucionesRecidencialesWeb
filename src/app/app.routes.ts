@@ -9,6 +9,7 @@ import { EmployeeListComponent } from './features/employees/components/employee-
 import { LoginComponent } from './features/login/login.component';
 import { QuotationFormComponent } from './features/quotations/components/quotation-form/quotation-form.component';
 import { QuotationListComponent } from './features/quotations/components/quotation-list/quotation-list.component';
+import { QuotationViewComponent } from './features/quotations/components/quotation-view/quotation-view.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 
 export const routes: Routes = [
@@ -51,7 +52,8 @@ export const routes: Routes = [
                 children: [
                     { path: '', component: QuotationListComponent },
                     { path: 'new', component: QuotationFormComponent },
-                    { path: 'edit/:id', component: QuotationFormComponent }
+                    { path: 'edit/:id', component: QuotationFormComponent },
+                    { path: 'view/:id', component: QuotationViewComponent }
                 ]
             }
         ]

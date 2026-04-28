@@ -36,6 +36,7 @@ import { QuotationService } from '../../services/quotation.service';
               <td>{{ quotation.descripcionObra || '-' | slice:0:50 }}{{ quotation.descripcionObra && quotation.descripcionObra.length > 50 ? '...' : '' }}</td>
               <td>{{ quotation.total | currency:'COP':'symbol':'1.0-0' }}</td>
               <td class="actions">
+                <a [routerLink]="['/quotations/view', quotation.id]" class="btn btn-sm btn-view">Ver</a>
                 <a [routerLink]="['/quotations/edit', quotation.id]" class="btn btn-sm btn-edit">Editar</a>
                 <button class="btn btn-sm btn-delete" (click)="deleteQuotation(quotation.id)">Eliminar</button>
               </td>
@@ -53,6 +54,7 @@ import { QuotationService } from '../../services/quotation.service';
     .btn { padding: 10px 20px; border-radius: 6px; text-decoration: none; cursor: pointer; border: none; font-size: 0.9rem; }
     .btn-primary { background: #2c5282; color: white; }
     .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-view { background: #38a169; color: white; margin-right: 5px; }
     .btn-edit { background: #3182ce; color: white; margin-right: 5px; }
     .btn-delete { background: #e53e3e; color: white; }
     .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }

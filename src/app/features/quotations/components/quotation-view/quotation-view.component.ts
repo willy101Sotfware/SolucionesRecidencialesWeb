@@ -1,0 +1,448 @@
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { QuotationService } from '../../services';
+import { QuotationItemService } from '../../services/quotation-item.service';
+import { QuotationResponse } from '../../../../core/models';
+import html2pdf from 'html2pdf.js';
+
+@Component({
+  selector: 'app-quotation-view',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="quotation-view-container">
+      <!-- Barra de Acciones -->
+      <div class="action-bar">
+        <button class="btn btn-secondary" routerLink="/quotations">
+          ← Volver
+        </button>
+        <button class="btn btn-primary" (click)="downloadPdf()" [disabled]="isLoading">
+          📄 Descargar PDF
+        </button>
+      </div>
+
+      <!-- Contenido de la Cotización -->
+      <div *ngIf="isLoading" class="loading">Cargando cotización...</div>
+      
+      <div *ngIf="!isLoading && quotation" #quotationContent class="quotation-document">
+        <!-- Header con Logo -->
+        <div class="doc-header">
+          <div class="logo-section">
+            <h1 class="company-name">Soluciones Residenciales</h1>
+          </div>
+        </div>
+
+        <!-- Fecha y Número -->
+        <div class="doc-meta">
+          <div class="date">
+            Medellín, {{ formatDate(quotation.createdAt) }}
+          </div>
+          <div class="quotation-number">
+            {{ quotation.numero }}
+          </div>
+        </div>
+
+        <!-- Datos del Cliente -->
+        <div class="client-section">
+          <p class="label">Señores</p>
+          <p class="client-name">{{ quotation.buildingName }}</p>
+        </div>
+
+        <!-- Asunto -->
+        <div class="subject-section">
+          <p class="subject-label">Asunto: </p>
+          <p class="subject-text">{{ quotation.asunto }}</p>
+        </div>
+
+        <!-- Saludo y Header -->
+        <div class="greeting-section">
+          <p>{{ quotation.cordialSaludo }}</p>
+          <p class="proposal-text">{{ quotation.headerPropuesta }}</p>
+        </div>
+
+        <!-- Items de la Cotización -->
+        <div class="items-section">
+          <h3 class="section-title">DETALLE DE LA PROPUESTA</h3>
+          
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-desc">DESCRIPCIÓN</th>
+                <th class="col-qty">CANT.</th>
+                <th class="col-unit">UNIDAD</th>
+                <th class="col-price">V. UNITARIO</th>
+                <th class="col-total">V. TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of quotation.quotationItems; let i = index">
+                <td class="col-num">{{ i + 1 }}</td>
+                <td class="col-desc">{{ item.descripcion }}</td>
+                <td class="col-qty">{{ item.cantidad || '-' }}</td>
+                <td class="col-unit">{{ item.unidadMedida || '-' }}</td>
+                <td class="col-price">{{ formatCurrency(item.valorUnitario) }}</td>
+                <td class="col-total">{{ formatCurrency(item.valorTotal) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Resumen Financiero -->
+        <div class="financial-summary">
+          <div class="summary-row">
+            <span>Valor Obra:</span>
+            <span>{{ formatCurrency(quotation.valorObra) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Utilidad (6%):</span>
+            <span>{{ formatCurrency(quotation.utilidad) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>IVA (19%):</span>
+            <span>{{ formatCurrency(quotation.iva) }}</span>
+          </div>
+          <div class="summary-row total">
+            <span>TOTAL:</span>
+            <span>{{ formatCurrency(quotation.total) }}</span>
+          </div>
+        </div>
+
+        <!-- Plazo y Garantía -->
+        <div class="terms-section">
+          <div *ngIf="quotation.plazoEjecucion" class="term-item">
+            <strong>Plazo de Ejecución:</strong> {{ quotation.plazoEjecucion }}
+          </div>
+          <div *ngIf="quotation.garantia" class="term-item">
+            <strong>Garantía:</strong> {{ quotation.garantia }}
+          </div>
+        </div>
+
+        <!-- Firma -->
+        <div class="signature-section">
+          <p class="signature-name">{{ quotation.firmaNombre }}</p>
+          <p class="signature-role">{{ quotation.firmaCargo }}</p>
+          <p class="signature-phone">{{ quotation.firmaCelular }}</p>
+        </div>
+
+        <!-- Nota Pie -->
+        <div *ngIf="quotation.notaPie" class="footer-note">
+          <p>{{ quotation.notaPie }}</p>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .quotation-view-container {
+      padding: 1.5rem;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #1890ff;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #40a9ff;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #595959;
+    }
+
+    .btn-secondary:hover {
+      background: #e8e8e8;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.2rem;
+      color: #595959;
+    }
+
+    .quotation-document {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: white;
+      padding: 20mm;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-family: Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .doc-header {
+      border-bottom: 3px solid #1890ff;
+      padding-bottom: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .company-name {
+      color: #1890ff;
+      font-size: 24pt;
+      margin: 0;
+    }
+
+    .doc-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .date {
+      color: #595959;
+    }
+
+    .quotation-number {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #1890ff;
+    }
+
+    .client-section {
+      margin-bottom: 2rem;
+    }
+
+    .label {
+      margin: 0;
+      color: #595959;
+    }
+
+    .client-name {
+      margin: 0.5rem 0;
+      font-weight: bold;
+      font-size: 12pt;
+    }
+
+    .client-nit, .client-address, .client-city {
+      margin: 0.25rem 0;
+    }
+
+    .subject-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .subject-label {
+      display: inline;
+      font-weight: bold;
+    }
+
+    .subject-text {
+      display: inline;
+    }
+
+    .greeting-section {
+      margin-bottom: 2rem;
+    }
+
+    .proposal-text {
+      text-align: justify;
+    }
+
+    .items-section {
+      margin: 2rem 0;
+    }
+
+    .section-title {
+      color: #1890ff;
+      font-size: 12pt;
+      border-bottom: 2px solid #1890ff;
+      padding-bottom: 0.5rem;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .items-table th {
+      background: #1890ff;
+      color: white;
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .items-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .items-table tbody tr:hover {
+      background: #f5f5f5;
+    }
+
+    .col-num { width: 5%; text-align: center; }
+    .col-desc { width: 35%; }
+    .col-qty { width: 10%; text-align: center; }
+    .col-unit { width: 10%; }
+    .col-price { width: 20%; text-align: right; }
+    .col-total { width: 20%; text-align: right; font-weight: bold; }
+
+    .financial-summary {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+    }
+
+    .summary-row.total {
+      border-top: 2px solid #1890ff;
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      font-size: 14pt;
+      font-weight: bold;
+      color: #1890ff;
+    }
+
+    .terms-section {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #fafafa;
+      border-left: 4px solid #1890ff;
+    }
+
+    .term-item {
+      margin: 0.5rem 0;
+    }
+
+    .signature-section {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e8e8e8;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .signature-role, .signature-phone {
+      margin: 0.25rem 0;
+      color: #595959;
+    }
+
+    .footer-note {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #fffbe6;
+      border-left: 4px solid #faad14;
+      font-size: 10pt;
+    }
+  `]
+})
+export class QuotationViewComponent implements OnInit {
+  @ViewChild('quotationContent') quotationContent!: ElementRef;
+
+  quotation: QuotationResponse | null = null;
+  isLoading = true;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private quotationService: QuotationService,
+    private quotationItemService: QuotationItemService
+  ) {}
+
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadQuotation(id);
+  }
+
+  loadQuotation(id: number): void {
+    this.quotationService.getById(id).subscribe({
+      next: (quotation: QuotationResponse) => {
+        this.quotation = quotation;
+        // Cargar items de la cotización
+        this.quotationItemService.getByQuotationId(id).subscribe({
+          next: (items) => {
+            this.quotation!.quotationItems = items;
+            this.isLoading = false;
+          },
+          error: (error: any) => {
+            console.error('Error cargando items:', error);
+            this.isLoading = false;
+          }
+        });
+      },
+      error: (error: any) => {
+        console.error('Error cargando cotización:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    if (!value) return '$0';
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
+
+  downloadPdf(): void {
+    const element = this.quotationContent.nativeElement;
+    const edificioName = this.quotation?.buildingName?.replace(/\s+/g, '_') || 'documento';
+    const opt: any = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename: `${this.quotation?.numero || 'cotizacion'}_${edificioName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+  
+    this.isLoading = true;
+    html2pdf().set(opt).from(element).save().then(() => {
+      this.isLoading = false;
+    });
+  }
+}
