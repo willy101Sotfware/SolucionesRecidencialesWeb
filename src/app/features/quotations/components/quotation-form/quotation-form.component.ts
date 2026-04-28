@@ -646,6 +646,10 @@ export class QuotationFormComponent implements OnInit {
     return this.quotationForm.get('total')?.value || 0;
   }
 
+  get valorObraCalculado(): number {
+    return this.items.reduce((sum, item) => sum + (item.valorTotal || 0), 0);
+  }
+
   get valorObraDisplay(): string {
     const valor = this.quotationForm.get('valorObra')?.value;
     if (!valor || valor === 0) return '';

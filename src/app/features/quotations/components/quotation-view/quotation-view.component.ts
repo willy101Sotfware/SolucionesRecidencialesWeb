@@ -29,7 +29,18 @@ import { QuotationItemService } from '../../services/quotation-item.service';
         <!-- Header con Logo -->
         <div class="doc-header">
           <div class="logo-section">
-            <h1 class="company-name">Soluciones Residenciales</h1>
+            <div class="company-logo">
+              <img src="assets/images/logo.png" alt="Soluciones Residenciales"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="logo-placeholder" style="display: none;">
+                <span class="logo-icon">🏢</span>
+                <h1 class="company-name">Soluciones Residenciales</h1>
+              </div>
+            </div>
+            <div class="company-info">
+              <p class="company-slogan">Soluciones profesionales para su hogar</p>
+              <p class="company-contact">Tel: 304 5889873 | Email: solucionesresidencialeser@gmail.com</p>
+            </div>
           </div>
         </div>
 
@@ -68,6 +79,7 @@ import { QuotationItemService } from '../../services/quotation-item.service';
           <table class="items-table">
             <thead>
               <tr>
+                <th class="col-img">IMG</th>
                 <th class="col-num">#</th>
                 <th class="col-desc">DESCRIPCIÓN</th>
                 <th class="col-qty">CANT.</th>
@@ -77,7 +89,13 @@ import { QuotationItemService } from '../../services/quotation-item.service';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of quotation.quotationItems; let i = index">
+              <tr *ngFor="let item of quotation.quotationItems; let i = index" class="item-row">
+                <td class="col-img">
+                  <div class="item-image-cell" *ngIf="item.imagen">
+                    <img [src]="item.imagen" alt="Item {{ i + 1 }}" class="item-thumb" />
+                  </div>
+                  <span *ngIf="!item.imagen" class="no-image">-</span>
+                </td>
                 <td class="col-num">{{ i + 1 }}</td>
                 <td class="col-desc">{{ item.descripcion }}</td>
                 <td class="col-qty">{{ item.cantidad || '-' }}</td>
@@ -212,6 +230,79 @@ import { QuotationItemService } from '../../services/quotation-item.service';
 
     .btn-secondary:hover {
       background: #e8e8e8;
+    }
+
+    /* Logo de Empresa */
+    .company-logo {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .company-logo img {
+      max-width: 200px;
+      max-height: 100px;
+      object-fit: contain;
+    }
+
+    .logo-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .logo-icon {
+      font-size: 48px;
+    }
+
+    .company-info {
+      text-align: center;
+      font-size: 10pt;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .company-slogan {
+      font-style: italic;
+      margin: 3px 0;
+    }
+
+    .company-contact {
+      margin: 0;
+      font-size: 9pt;
+    }
+
+    /* Imágenes de Ítems */
+    .col-img {
+      width: 60px;
+      text-align: center;
+    }
+
+    .item-image-cell {
+      width: 50px;
+      height: 50px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .item-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .no-image {
+      color: #999;
+      font-size: 10pt;
+    }
+
+    .item-row:hover {
+      background-color: #f9f9f9;
     }
 
     .loading {
