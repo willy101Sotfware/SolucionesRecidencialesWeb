@@ -1,6 +1,6 @@
-import { AsyncPipe, CommonModule, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { BuildingResponse, CompanyResponse, CreateQuotationRequest, QuotationItemResponse, QuotationResponse, UpdateQuotationRequest } from '../../../../core/models';
@@ -12,7 +12,7 @@ import { QuotationService } from '../../services/quotation.service';
 @Component({
   selector: 'app-quotation-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, NgIf, NgFor, AsyncPipe, CommonModule],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, NgIf, NgFor, AsyncPipe, CommonModule, CurrencyPipe],
   template: `
     <div class="page-container">
       <div class="page-header">
