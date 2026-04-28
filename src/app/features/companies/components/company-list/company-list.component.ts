@@ -21,13 +21,11 @@ import { CompanyService } from '../../services/company.service';
         <p>Cargando empresas...</p>
       </div>
 
-      <div class="error-message" *ngIf="errorMessage">
+      <div class="error-message" *ngIf="errorMessage && errorMessage.length > 0">
         {{ errorMessage }}
       </div>
 
-      <p>DEBUG: isLoading={{isLoading}}, errorMessage={{errorMessage || 'vacio'}}, companies.length={{companies.length}}</p>
-
-      <div class="table-container" *ngIf="!isLoading && !errorMessage">
+      <div class="table-container" *ngIf="!isLoading">
         <table class="data-table">
           <thead>
             <tr>
@@ -203,20 +201,19 @@ export class CompanyListComponent implements OnInit {
   loadCompanies(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    console.log('[DEBUG] Iniciando carga de empresas...');
+    this.cdr.detectChanges();
 
     this.companyService.getAll().subscribe({
       next: (data: CompanyResponse[]) => {
-        console.log('[DEBUG] Empresas recibidas:', data);
         this.companies = data;
         this.isLoading = false;
         this.cdr.detectChanges();
-        console.log('[DEBUG] isLoading:', this.isLoading, 'companies:', this.companies);
       },
       error: (error) => {
         this.isLoading = false;
         this.errorMessage = 'Error al cargar las empresas. Por favor, intente nuevamente.';
-        console.error('[DEBUG] Error loading companies:', error);
+        this.cdr.detectChanges();
+        console.error('Error al cargar empresas:', error);
       }
     });
   }

@@ -17,8 +17,8 @@ import { BuildingService } from '../../services/building.service';
         </a>
       </div>
       <div class="loading" *ngIf="isLoading"><p>Cargando edificios...</p></div>
-      <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
-      <div class="table-container" *ngIf="!isLoading && !errorMessage">
+      <div class="error-message" *ngIf="errorMessage && errorMessage.length > 0">{{ errorMessage }}</div>
+      <div class="table-container" *ngIf="!isLoading">
         <table class="data-table">
           <thead>
             <tr>
@@ -85,9 +85,19 @@ export class BuildingListComponent implements OnInit {
 
   loadBuildings(): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.buildingService.getAll().subscribe({
-      next: (data: BuildingResponse[]) => { this.buildings = data; this.isLoading = false; this.cdr.detectChanges(); },
-      error: (error: unknown) => { this.isLoading = false; this.errorMessage = 'Error al cargar los edificios.'; console.error(error); }
+      next: (data: BuildingResponse[]) => { 
+        this.buildings = data; 
+        this.isLoading = false; 
+        this.cdr.detectChanges(); 
+      },
+      error: (error: unknown) => { 
+        this.isLoading = false; 
+        this.errorMessage = 'Error al cargar los edificios.'; 
+        this.cdr.detectChanges();
+        console.error(error); 
+      }
     });
   }
 

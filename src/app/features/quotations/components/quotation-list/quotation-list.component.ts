@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgFor, NgIf, SlicePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { QuotationResponse } from '../../../../core/models';
 import { QuotationService } from '../../services/quotation.service';
@@ -15,8 +15,8 @@ import { QuotationService } from '../../services/quotation.service';
         <a routerLink="/quotations/new" class="btn btn-primary"><span>+ Nueva Cotización</span></a>
       </div>
       <div class="loading" *ngIf="isLoading"><p>Cargando cotizaciones...</p></div>
-      <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
-      <div class="table-container" *ngIf="!isLoading && !errorMessage">
+      <div class="error-message" *ngIf="errorMessage && errorMessage.length > 0">{{ errorMessage }}</div>
+      <div class="table-container" *ngIf="!isLoading">
         <table class="data-table">
           <thead>
             <tr>
@@ -70,15 +70,28 @@ export class QuotationListComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
 
-  constructor(private quotationService: QuotationService) { }
+  constructor(
+    private quotationService: QuotationService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void { this.loadQuotations(); }
 
   loadQuotations(): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.quotationService.getAll().subscribe({
-      next: (data: QuotationResponse[]) => { this.quotations = data; this.isLoading = false; },
-      error: (error: unknown) => { this.isLoading = false; this.errorMessage = 'Error al cargar las cotizaciones.'; console.error(error); }
+      next: (data: QuotationResponse[]) => { 
+        this.quotations = data; 
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error: unknown) => { 
+        this.isLoading = false; 
+        this.errorMessage = 'Error al cargar las cotizaciones.'; 
+        this.cdr.detectChanges();
+        console.error(error); 
+      }
     });
   }
 

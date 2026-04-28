@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgFor, NgIf } from '@angular/common';
 import { EmployeeService } from '../../services/employee.service';
@@ -15,8 +15,8 @@ import { EmployeeResponse } from '../../../../core/models';
         <a routerLink="/employees/new" class="btn btn-primary"><span>+ Nuevo Empleado</span></a>
       </div>
       <div class="loading" *ngIf="isLoading"><p>Cargando empleados...</p></div>
-      <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
-      <div class="table-container" *ngIf="!isLoading && !errorMessage">
+      <div class="error-message" *ngIf="errorMessage && errorMessage.length > 0">{{ errorMessage }}</div>
+      <div class="table-container" *ngIf="!isLoading">
         <table class="data-table">
           <thead>
             <tr>
@@ -75,15 +75,28 @@ export class EmployeeListComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
 
-  constructor(private employeeService: EmployeeService) {}
+  constructor(
+    private employeeService: EmployeeService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void { this.loadEmployees(); }
 
   loadEmployees(): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.employeeService.getAll().subscribe({
-      next: (data: EmployeeResponse[]) => { this.employees = data; this.isLoading = false; },
-      error: (error: unknown) => { this.isLoading = false; this.errorMessage = 'Error al cargar los empleados.'; console.error(error); }
+      next: (data: EmployeeResponse[]) => { 
+        this.employees = data; 
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error: unknown) => { 
+        this.isLoading = false;
+        this.errorMessage = 'Error al cargar los empleados. Intente nuevamente.';
+        this.cdr.detectChanges();
+        console.error('Error al cargar empleados:', error); 
+      }
     });
   }
 
