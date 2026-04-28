@@ -1,9 +1,10 @@
-import { QuotationItemResponse, CreateQuotationItemRequest } from './quotation-item.model';
+import { QuotationItemResponse } from './quotation-item.model';
 
 export interface QuotationResponse {
   id: number;
   numero: string;
   fecha?: string;
+  createdAt?: string;
   idEdificio?: number;
   buildingName?: string;
   asunto?: string;
@@ -15,7 +16,9 @@ export interface QuotationResponse {
   utilidad?: number;
   porcentajeIva?: number;
   ivaUtilidad?: number;
+  iva?: number;
   total?: number;
+  plazoEjecucion?: string;
   notaPie?: string;
   firmaNombre?: string;
   firmaCargo?: string;

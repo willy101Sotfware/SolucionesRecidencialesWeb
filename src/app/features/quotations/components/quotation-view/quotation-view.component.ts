@@ -1,10 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import html2pdf from 'html2pdf.js';
+import { QuotationResponse } from '../../../../core/models';
 import { QuotationService } from '../../services';
 import { QuotationItemService } from '../../services/quotation-item.service';
-import { QuotationResponse } from '../../../../core/models';
-import html2pdf from 'html2pdf.js';
 
 @Component({
   selector: 'app-quotation-view',
@@ -17,14 +17,14 @@ import html2pdf from 'html2pdf.js';
         <button class="btn btn-secondary" routerLink="/quotations">
           ← Volver
         </button>
-        <button class="btn btn-primary" (click)="downloadPdf()" [disabled]="isLoading">
+        <button class="btn btn-pdf" (click)="downloadPdf()" [disabled]="isLoading">
           📄 Descargar PDF
         </button>
       </div>
 
       <!-- Contenido de la Cotización -->
       <div *ngIf="isLoading" class="loading">Cargando cotización...</div>
-      
+
       <div *ngIf="!isLoading && quotation" #quotationContent class="quotation-document">
         <!-- Header con Logo -->
         <div class="doc-header">
@@ -36,7 +36,7 @@ import html2pdf from 'html2pdf.js';
         <!-- Fecha y Número -->
         <div class="doc-meta">
           <div class="date">
-            Medellín, {{ formatDate(quotation.createdAt) }}
+            Medellín, {{ formatDate(quotation.createdAt ?? quotation.fecha ?? '') }}
           </div>
           <div class="quotation-number">
             {{ quotation.numero }}
@@ -64,7 +64,7 @@ import html2pdf from 'html2pdf.js';
         <!-- Items de la Cotización -->
         <div class="items-section">
           <h3 class="section-title">DETALLE DE LA PROPUESTA</h3>
-          
+
           <table class="items-table">
             <thead>
               <tr>
@@ -168,10 +168,41 @@ import html2pdf from 'html2pdf.js';
     .btn-primary {
       background: #1890ff;
       color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+      transition: all 0.2s ease;
     }
 
     .btn-primary:hover:not(:disabled) {
       background: #40a9ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+    }
+
+    .btn-pdf {
+      background: linear-gradient(135deg, #FF453A 0%, #FF6B6B 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-pdf:hover:not(:disabled) {
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF453A 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 69, 58, 0.4);
     }
 
     .btn-secondary {
@@ -379,8 +410,9 @@ export class QuotationViewComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private quotationService: QuotationService,
-    private quotationItemService: QuotationItemService
-  ) {}
+    private quotationItemService: QuotationItemService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -396,16 +428,19 @@ export class QuotationViewComponent implements OnInit {
           next: (items) => {
             this.quotation!.quotationItems = items;
             this.isLoading = false;
+            this.cdr.detectChanges();
           },
           error: (error: any) => {
             console.error('Error cargando items:', error);
             this.isLoading = false;
+            this.cdr.detectChanges();
           }
         });
       },
       error: (error: any) => {
         console.error('Error cargando cotización:', error);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -430,19 +465,31 @@ export class QuotationViewComponent implements OnInit {
   }
 
   downloadPdf(): void {
+    if (!this.quotationContent?.nativeElement) {
+      console.error('No se puede descargar PDF: contenido no disponible');
+      return;
+    }
+
     const element = this.quotationContent.nativeElement;
     const edificioName = this.quotation?.buildingName?.replace(/\s+/g, '_') || 'documento';
     const opt: any = {
       margin: [10, 10, 10, 10] as [number, number, number, number],
       filename: `${this.quotation?.numero || 'cotizacion'}_${edificioName}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-  
+
     this.isLoading = true;
-    html2pdf().set(opt).from(element).save().then(() => {
-      this.isLoading = false;
-    });
+    html2pdf().set(opt).from(element).save()
+      .then(() => {
+        console.log('PDF descargado exitosamente');
+        this.isLoading = false;
+      })
+      .catch((error: any) => {
+        console.error('Error descargando PDF:', error);
+        this.isLoading = false;
+        alert('Error al generar el PDF. Intente nuevamente.');
+      });
   }
 }

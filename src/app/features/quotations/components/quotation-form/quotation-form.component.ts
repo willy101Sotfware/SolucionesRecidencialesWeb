@@ -2,7 +2,6 @@ import { AsyncPipe, CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/com
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
 import { BuildingResponse, CompanyResponse, CreateQuotationRequest, QuotationItemResponse, QuotationResponse, UpdateQuotationRequest } from '../../../../core/models';
 import { BuildingService } from '../../../buildings/services/building.service';
 import { CompanyService } from '../../../companies/services/company.service';
@@ -24,7 +23,7 @@ import { QuotationService } from '../../services/quotation.service';
         <!-- Columna Izquierda: Formulario -->
         <div class="form-column">
           <form [formGroup]="quotationForm" (ngSubmit)="onSubmit()" class="quotation-form">
-            
+
             <!-- Número y Fecha -->
             <div class="form-section">
               <h3>INFORMACIÓN GENERAL</h3>
@@ -104,11 +103,11 @@ import { QuotationService } from '../../services/quotation.service';
             <!-- Items de la Cotización -->
             <div class="form-section">
               <h3>DESCRIPCIÓN DE LA OBRA (ÍTEMS)</h3>
-              
+
               <!-- Agregar Item Simple -->
               <div class="add-item-section">
-                <textarea 
-                  [(ngModel)]="newItemText" 
+                <textarea
+                  [(ngModel)]="newItemText"
                   [ngModelOptions]="{standalone: true}"
                   placeholder="Añadir ítem (Enter para entrada rápida)..."
                   rows="3"
@@ -131,7 +130,7 @@ import { QuotationService } from '../../services/quotation.service';
                     <span class="item-number">{{ i + 1 }}</span>
                     <button type="button" class="btn-remove" (click)="removeItem(i)">✕</button>
                   </div>
-                  
+
                   <!-- Imagen del item -->
                   <div class="item-image" *ngIf="item.imagen">
                     <img [src]="item.imagen" alt="Imagen del item" />
@@ -196,12 +195,12 @@ import { QuotationService } from '../../services/quotation.service';
         <div class="financial-column">
           <div class="financial-card">
             <h3>CÁLCULOS FINANCIEROS</h3>
-            
+
             <div class="financial-icon">💰</div>
 
             <div class="form-group">
               <label>Valor de la Obra ($)</label>
-              <input type="text" [formControl]="quotationForm.get('valorObra')" class="financial-input" placeholder="0" />
+              <input type="text" [value]="valorObraDisplay" (input)="onValorObraInput($event)" class="financial-input" placeholder="0" />
             </div>
 
             <div class="financial-summary">
@@ -209,7 +208,7 @@ import { QuotationService } from '../../services/quotation.service';
                 <span>Utilidad ({{ porcentajeUtilidad * 100 }}%)</span>
                 <span class="summary-value">{{ utilidadCalculada | currency:'COP':'symbol':'1.0-0' }}</span>
               </div>
-              
+
               <div class="summary-row">
                 <span>IVA sobre Utilidad ({{ porcentajeIva * 100 }}%)</span>
                 <span class="summary-value">{{ ivaCalculado | currency:'COP':'symbol':'1.0-0' }}</span>
@@ -301,11 +300,11 @@ import { QuotationService } from '../../services/quotation.service';
     .btn-add-simple { background: #5856D6; color: white; }
     .btn-add-advanced { background: #FF9500; color: white; }
     .btn-remove { background: transparent; color: #FF453A; border: none; cursor: pointer; font-size: 1.2rem; }
-    
+
     .form-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
     .form-column { min-width: 0; }
     .financial-column { position: sticky; top: 20px; height: fit-content; }
-    
+
     .quotation-form { display: flex; flex-direction: column; gap: 20px; }
     .form-section { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .form-section h3 { margin: 0 0 15px 0; color: #5856D6; font-size: 0.95rem; border-bottom: 2px solid #5856D6; padding-bottom: 8px; }
@@ -317,14 +316,14 @@ import { QuotationService } from '../../services/quotation.service';
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #5856D6; }
     .checkbox-group { flex-direction: row; align-items: center; gap: 8px; }
     .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; }
-    
+
     .edificio-details { background: #f7fafc; padding: 10px; border-radius: 6px; margin-top: 8px; }
     .edificio-details p { margin: 4px 0; font-size: 0.85rem; color: #4a5568; }
-    
+
     .add-item-section { margin-bottom: 15px; }
     .item-input { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; resize: vertical; }
     .item-buttons { display: flex; gap: 8px; margin-top: 8px; }
-    
+
     .items-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
     .item-card { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; display: flex; gap: 12px; }
     .item-header { display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -337,43 +336,43 @@ import { QuotationService } from '../../services/quotation.service';
     .item-price { color: #3182ce; font-weight: 500; }
     .item-total { color: #2c5282; font-weight: 600; }
     .empty-items { text-align: center; padding: 30px; color: #718096; }
-    
+
     .financial-card { background: linear-gradient(135deg, #2E2E3E 0%, #1E1E2E 100%); color: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(88,86,214,0.3); }
     .financial-card h3 { color: #5856D6; font-size: 1rem; margin: 0 0 20px 0; text-align: center; }
     .financial-icon { font-size: 3rem; text-align: center; margin-bottom: 20px; }
     .financial-input { background: #2E2E3E; color: white; border: 2px solid #5856D6; font-size: 1.3rem; font-weight: bold; text-align: right; }
     .financial-input::placeholder { color: #8E8E93; }
-    
+
     .financial-summary { margin-top: 20px; padding-top: 20px; border-top: 1px solid #3E3E4E; }
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
     .summary-value { color: #8E8E93; font-weight: 500; }
     .summary-divider { height: 2px; background: #5856D6; margin: 15px 0; }
     .summary-total { font-size: 1.1rem; font-weight: bold; }
     .total-value { color: white; font-size: 1.5rem; font-weight: bold; }
-    
+
     .financial-note { background: #161625; padding: 12px; border-radius: 6px; margin-top: 20px; }
     .financial-note p { margin: 0; font-size: 0.75rem; color: #8E8E93; font-style: italic; line-height: 1.4; }
-    
+
     .error-alert { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 6px; }
     .form-actions { display: flex; gap: 15px; justify-content: flex-end; padding-top: 20px; }
     .date-display { padding: 10px; background: #f7fafc; border-radius: 6px; color: #4a5568; font-weight: 500; }
-    
+
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
     .modal-content { background: white; border-radius: 12px; padding: 25px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
     .modal-content h3 { margin: 0 0 20px 0; color: #1e3a5f; font-size: 1.2rem; text-align: center; }
     .modal-form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 10px; justify-content: center; }
-    
+
     .form-group.small { flex: 0 0 120px; }
     .form-group.flex-1 { flex: 1; }
     .readonly-input { background: #f7fafc; cursor: not-allowed; }
-    
+
     .image-upload-section { display: flex; flex-direction: column; gap: 10px; }
     .btn-image { background: #5856D6; color: white; align-self: flex-start; }
     .image-preview { position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; }
     .image-preview img { width: 100%; height: 100%; object-fit: cover; }
     .btn-remove-image { position: absolute; top: 5px; right: 5px; background: rgba(255,69,58,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
-    
+
     @media (max-width: 1024px) {
       .form-layout { grid-template-columns: 1fr; }
       .financial-column { position: static; }
@@ -386,19 +385,19 @@ export class QuotationFormComponent implements OnInit {
   quotationId?: number;
   isLoading = false;
   errorMessage = '';
-  
+
   // Empresas y Edificios
   companies: CompanyResponse[] = [];
   allBuildings: BuildingResponse[] = [];
   filteredBuildings: BuildingResponse[] = [];
   selectedEdificio: BuildingResponse | null = null;
-  
+
   // Items
   items: QuotationItemResponse[] = [];
   newItemText = '';
   showAdvancedItemModal = false;
   advancedItem: Partial<QuotationItemResponse> = {};
-  
+
   // Unidades de medida (del WPF)
   unidadesMedida = [
     '',
@@ -431,7 +430,7 @@ export class QuotationFormComponent implements OnInit {
     'ft',
     'yd'
   ];
-  
+
   // Cálculos financieros
   porcentajeUtilidad = 0.06; // 6%
   porcentajeIva = 0.19; // 19%
@@ -480,7 +479,7 @@ export class QuotationFormComponent implements OnInit {
   ngOnInit(): void {
     this.loadInitialData();
     this.setCurrentDate();
-    
+
     this.quotationId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.quotationId;
     if (this.isEditMode) this.loadQuotation();
@@ -537,7 +536,7 @@ export class QuotationFormComponent implements OnInit {
     if (!this.newItemText.trim()) return;
 
     const lines = this.newItemText.split(/\r?\n/).filter(line => line.trim());
-    
+
     lines.forEach(line => {
       let cleanLine = line.trim().replace(/^[•\-*\s]+/, '').trim();
       if (cleanLine) {
@@ -581,7 +580,7 @@ export class QuotationFormComponent implements OnInit {
   calcularValorTotalItem(): void {
     const cantidad = Number(this.advancedItem.cantidad) || 0;
     const valorUnitario = Number(this.advancedItem.valorUnitario) || 0;
-    
+
     if (cantidad > 0 && valorUnitario > 0) {
       this.advancedItem.valorTotal = cantidad * valorUnitario;
     } else {
@@ -612,7 +611,7 @@ export class QuotationFormComponent implements OnInit {
     const sumaTotal = this.items.reduce((sum, item) => {
       return sum + (item.valorTotal || 0);
     }, 0);
-    
+
     this.quotationForm.patchValue({ valorObra: sumaTotal });
     this.calculateTotals();
   }
@@ -647,18 +646,32 @@ export class QuotationFormComponent implements OnInit {
     return this.quotationForm.get('total')?.value || 0;
   }
 
+  get valorObraDisplay(): string {
+    const valor = this.quotationForm.get('valorObra')?.value;
+    if (!valor || valor === 0) return '';
+    return valor.toLocaleString('es-CO');
+  }
+
+  onValorObraInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(/[^\d]/g, '');
+    const numValue = value ? parseInt(value, 10) : 0;
+    this.quotationForm.patchValue({ valorObra: numValue });
+    this.calculateTotals();
+  }
+
   // Validación
   isValid(): boolean {
-    return this.quotationForm.valid && 
-           this.items.length > 0 && 
-           this.totalCalculado > 0;
+    return this.quotationForm.valid &&
+      this.items.length > 0 &&
+      this.totalCalculado > 0;
   }
 
   // Carga y Guardado
   loadQuotation(): void {
     if (!this.quotationId) return;
     this.isLoading = true;
-    
+
     this.quotationService.getById(this.quotationId).subscribe({
       next: (quotation: QuotationResponse) => {
         // Cargar items
@@ -681,7 +694,7 @@ export class QuotationFormComponent implements OnInit {
           const edificio = this.allBuildings.find(b => b.idEdificio === quotation.idEdificio);
           if (edificio) {
             this.selectedEdificio = edificio;
-            
+
             // Seleccionar empresa
             if (edificio.companyId) {
               this.onEmpresaChange({ target: { value: edificio.companyId } });
@@ -692,9 +705,9 @@ export class QuotationFormComponent implements OnInit {
         this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: () => { 
-        this.isLoading = false; 
-        this.errorMessage = 'Error al cargar la cotización.'; 
+      error: () => {
+        this.isLoading = false;
+        this.errorMessage = 'Error al cargar la cotización.';
       }
     });
   }
@@ -726,20 +739,20 @@ export class QuotationFormComponent implements OnInit {
       const request: UpdateQuotationRequest = { ...payload, id: this.quotationId };
       this.quotationService.update(this.quotationId, request).subscribe({
         next: () => this.router.navigate(['/quotations']),
-        error: (err: unknown) => { 
-          this.isLoading = false; 
-          this.errorMessage = 'Error al actualizar la cotización.'; 
-          console.error(err); 
+        error: (err: unknown) => {
+          this.isLoading = false;
+          this.errorMessage = 'Error al actualizar la cotización.';
+          console.error(err);
         }
       });
     } else {
       const request: CreateQuotationRequest = payload;
       this.quotationService.create(request).subscribe({
         next: () => this.router.navigate(['/quotations']),
-        error: (err: unknown) => { 
-          this.isLoading = false; 
-          this.errorMessage = 'Error al crear la cotización.'; 
-          console.error(err); 
+        error: (err: unknown) => {
+          this.isLoading = false;
+          this.errorMessage = 'Error al crear la cotización.';
+          console.error(err);
         }
       });
     }
