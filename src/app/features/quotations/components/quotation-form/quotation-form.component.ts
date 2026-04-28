@@ -200,8 +200,8 @@ import { QuotationService } from '../../services/quotation.service';
             <div class="financial-icon">💰</div>
 
             <div class="form-group">
-              <label for="valorObra">Valor de la Obra ($)</label>
-              <input type="text" id="valorObra" formControlName="valorObra" class="financial-input" placeholder="0" />
+              <label>Valor de la Obra ($)</label>
+              <input type="text" [formControl]="quotationForm.get('valorObra')" class="financial-input" placeholder="0" />
             </div>
 
             <div class="financial-summary">
