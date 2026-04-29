@@ -2,7 +2,7 @@ import { AsyncPipe, CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/com
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BuildingResponse, CompanyResponse, CreateQuotationRequest, QuotationItemResponse, QuotationResponse, UpdateQuotationRequest } from '../../../../core/models';
+import { BuildingResponse, CompanyResponse, CreateQuotationItemRequest, CreateQuotationRequest, QuotationItemResponse, QuotationResponse, UpdateQuotationRequest } from '../../../../core/models';
 import { BuildingService } from '../../../buildings/services/building.service';
 import { CompanyService } from '../../../companies/services/company.service';
 import { QuotationItemService } from '../../services/quotation-item.service';
@@ -190,43 +190,6 @@ import { QuotationService } from '../../services/quotation.service';
             </div>
           </form>
         </div>
-
-        <!-- Columna Derecha: Cálculos Financieros -->
-        <div class="financial-column">
-          <div class="financial-card">
-            <h3>CÁLCULOS FINANCIEROS</h3>
-
-            <div class="financial-icon">💰</div>
-
-            <div class="form-group">
-              <label>Valor de la Obra ($)</label>
-              <input type="text" [value]="valorObraDisplay" (input)="onValorObraInput($event)" class="financial-input" placeholder="0" />
-            </div>
-
-            <div class="financial-summary">
-              <div class="summary-row">
-                <span>Utilidad ({{ porcentajeUtilidad * 100 }}%)</span>
-                <span class="summary-value">{{ utilidadCalculada | currency:'COP':'symbol':'1.0-0' }}</span>
-              </div>
-
-              <div class="summary-row">
-                <span>IVA sobre Utilidad ({{ porcentajeIva * 100 }}%)</span>
-                <span class="summary-value">{{ ivaCalculado | currency:'COP':'symbol':'1.0-0' }}</span>
-              </div>
-
-              <div class="summary-divider"></div>
-
-              <div class="summary-row summary-total">
-                <span>TOTAL COTIZACIÓN</span>
-                <span class="summary-value total-value">{{ totalCalculado | currency:'COP':'symbol':'1.0-0' }}</span>
-              </div>
-            </div>
-
-            <div class="financial-note">
-              <p>Cuenta de ahorros Bancolombia N° 61400040906. Adjuntar soporte de pago al correo solucionesresidencialeser@gmail.com o al WhatsApp 304 5889873.</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Modal para Item Avanzado -->
@@ -301,9 +264,8 @@ import { QuotationService } from '../../services/quotation.service';
     .btn-add-advanced { background: #FF9500; color: white; }
     .btn-remove { background: transparent; color: #FF453A; border: none; cursor: pointer; font-size: 1.2rem; }
 
-    .form-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+    .form-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
     .form-column { min-width: 0; }
-    .financial-column { position: sticky; top: 20px; height: fit-content; }
 
     .quotation-form { display: flex; flex-direction: column; gap: 20px; }
     .form-section { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -667,8 +629,7 @@ export class QuotationFormComponent implements OnInit {
   // Validación
   isValid(): boolean {
     return this.quotationForm.valid &&
-      this.items.length > 0 &&
-      this.totalCalculado > 0;
+      this.items.length > 0;
   }
 
   // Carga y Guardado
@@ -742,7 +703,10 @@ export class QuotationFormComponent implements OnInit {
     if (this.isEditMode && this.quotationId) {
       const request: UpdateQuotationRequest = { ...payload, id: this.quotationId };
       this.quotationService.update(this.quotationId, request).subscribe({
-        next: () => this.router.navigate(['/quotations']),
+        next: () => {
+          // Guardar ítems después de actualizar la cotización
+          this.saveQuotationItems(this.quotationId!);
+        },
         error: (err: unknown) => {
           this.isLoading = false;
           this.errorMessage = 'Error al actualizar la cotización.';
@@ -752,7 +716,10 @@ export class QuotationFormComponent implements OnInit {
     } else {
       const request: CreateQuotationRequest = payload;
       this.quotationService.create(request).subscribe({
-        next: () => this.router.navigate(['/quotations']),
+        next: (newId) => {
+          // Guardar ítems después de crear la cotización
+          this.saveQuotationItems(newId);
+        },
         error: (err: unknown) => {
           this.isLoading = false;
           this.errorMessage = 'Error al crear la cotización.';
@@ -760,5 +727,36 @@ export class QuotationFormComponent implements OnInit {
         }
       });
     }
+  }
+
+  saveQuotationItems(quotationId: number): void {
+    // Guardar cada ítem
+    const itemPromises = this.items.map(item => {
+      const itemRequest: CreateQuotationItemRequest = {
+        idCotizacion: quotationId,
+        descripcion: item.descripcion,
+        cantidad: item.cantidad,
+        unidadMedida: item.unidadMedida,
+        imagen: item.imagen,
+        valorUnitario: item.valorUnitario,
+        valorTotal: item.valorTotal,
+        plazoEntrega: item.plazoEntrega,
+        showPlazo: item.showPlazo,
+        garantia: item.garantia,
+        showGarantia: item.showGarantia
+      };
+      return this.quotationItemService.create(itemRequest).toPromise();
+    });
+
+    Promise.all(itemPromises)
+      .then(() => {
+        this.isLoading = false;
+        this.router.navigate(['/quotations']);
+      })
+      .catch((err) => {
+        this.isLoading = false;
+        this.errorMessage = 'Error al guardar los ítems.';
+        console.error(err);
+      });
   }
 }

@@ -107,26 +107,6 @@ import { QuotationItemService } from '../../services/quotation-item.service';
           </table>
         </div>
 
-        <!-- Resumen Financiero -->
-        <div class="financial-summary">
-          <div class="summary-row">
-            <span>Valor Obra:</span>
-            <span>{{ formatCurrency(quotation.valorObra) }}</span>
-          </div>
-          <div class="summary-row">
-            <span>Utilidad (6%):</span>
-            <span>{{ formatCurrency(quotation.utilidad) }}</span>
-          </div>
-          <div class="summary-row">
-            <span>IVA (19%):</span>
-            <span>{{ formatCurrency(quotation.iva) }}</span>
-          </div>
-          <div class="summary-row total">
-            <span>TOTAL:</span>
-            <span>{{ formatCurrency(quotation.total) }}</span>
-          </div>
-        </div>
-
         <!-- Plazo y Garantía -->
         <div class="terms-section">
           <div *ngIf="quotation.plazoEjecucion" class="term-item">
@@ -514,9 +494,11 @@ export class QuotationViewComponent implements OnInit {
     this.quotationService.getById(id).subscribe({
       next: (quotation: QuotationResponse) => {
         this.quotation = quotation;
+        console.log('Cotización cargada:', quotation);
         // Cargar items de la cotización
         this.quotationItemService.getByQuotationId(id).subscribe({
           next: (items) => {
+            console.log('Ítems cargados:', items);
             this.quotation!.quotationItems = items;
             this.isLoading = false;
             this.cdr.detectChanges();
@@ -555,7 +537,7 @@ export class QuotationViewComponent implements OnInit {
     }).format(value);
   }
 
-  downloadPdf(): void {
+  async downloadPdf(): Promise<void> {
     if (!this.quotationContent?.nativeElement) {
       console.error('No se puede descargar PDF: contenido no disponible');
       return;
@@ -563,15 +545,39 @@ export class QuotationViewComponent implements OnInit {
 
     const element = this.quotationContent.nativeElement;
     const edificioName = this.quotation?.buildingName?.replace(/\s+/g, '_') || 'documento';
+
+    this.isLoading = true;
+
+    // Esperar a que todas las imágenes se carguen
+    const images = element.querySelectorAll('img') as NodeListOf<HTMLImageElement>;
+    const imagePromises = Array.from(images).map((img: HTMLImageElement) => {
+      return new Promise<void>((resolve) => {
+        if (img.complete) {
+          resolve();
+        } else {
+          img.onload = () => resolve();
+          img.onerror = () => resolve(); // Continuar aunque falle la imagen
+        }
+      });
+    });
+
+    // Esperar 500ms adicional para asegurar renderizado completo
+    await Promise.all([...imagePromises, new Promise(r => setTimeout(r, 500))]);
+
     const opt: any = {
       margin: [10, 10, 10, 10] as [number, number, number, number],
       filename: `${this.quotation?.numero || 'cotizacion'}_${edificioName}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    this.isLoading = true;
     html2pdf().set(opt).from(element).save()
       .then(() => {
         console.log('PDF descargado exitosamente');
