@@ -1,4 +1,4 @@
-import { AsyncPipe, CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ import { QuotationService } from '../../services/quotation.service';
 @Component({
   selector: 'app-quotation-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, NgIf, NgFor, AsyncPipe, CommonModule, CurrencyPipe],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, NgIf, NgFor, CommonModule, CurrencyPipe],
   template: `
     <div class="page-container">
       <div class="page-header">
@@ -153,6 +153,32 @@ import { QuotationService } from '../../services/quotation.service';
 
               <div class="empty-items" *ngIf="items.length === 0">
                 <p>No hay items agregados</p>
+              </div>
+
+              <!-- Valor de la Obra -->
+              <div class="form-section">
+                <h3>VALOR DE LA OBRA</h3>
+                <div class="form-group">
+                  <label for="valorObra">Valor de la Obra ($)</label>
+                  <input type="number" id="valorObra" formControlName="valorObra"
+                         placeholder="0" (input)="calculateTotals()" />
+                </div>
+
+                <div class="financial-summary">
+                  <div class="summary-row">
+                    <span>Utilidad ({{ porcentajeUtilidad * 100 }}%)</span>
+                    <span>{{ utilidadCalculada | currency:'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <div class="summary-row">
+                    <span>IVA sobre Utilidad ({{ porcentajeIva * 100 }}%)</span>
+                    <span>{{ ivaCalculado | currency:'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <div class="summary-divider"></div>
+                  <div class="summary-total">
+                    <span>TOTAL COTIZACIÓN</span>
+                    <span>{{ totalCalculado | currency:'COP':'symbol':'1.0-0' }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -574,7 +600,11 @@ export class QuotationFormComponent implements OnInit {
       return sum + (item.valorTotal || 0);
     }, 0);
 
-    this.quotationForm.patchValue({ valorObra: sumaTotal });
+    // Solo actualizar valorObra si hay items con valorTotal (modo Avanzado)
+    // En modo Simple, el usuario escribe el valor manualmente
+    if (sumaTotal > 0) {
+      this.quotationForm.patchValue({ valorObra: sumaTotal });
+    }
     this.calculateTotals();
   }
 

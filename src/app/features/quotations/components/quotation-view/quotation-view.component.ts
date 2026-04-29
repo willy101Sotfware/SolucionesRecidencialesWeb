@@ -107,6 +107,26 @@ import { QuotationItemService } from '../../services/quotation-item.service';
           </table>
         </div>
 
+        <!-- Cálculos Financieros (igual que WPF) -->
+        <div class="financial-summary">
+          <div class="fin-row">
+            <span>Valor obra:</span>
+            <span>{{ formatCurrency(quotation.valorObra) }}</span>
+          </div>
+          <div class="fin-row">
+            <span>Utilidad {{ (quotation.porcentajeUtilidad || 0) * 100 }}%:</span>
+            <span>{{ formatCurrency(quotation.utilidad) }}</span>
+          </div>
+          <div class="fin-row">
+            <span>Valor del IVA sobre la utilidad {{ (quotation.porcentajeIva || 0) * 100 }}%:</span>
+            <span>{{ formatCurrency(quotation.ivaUtilidad) }}</span>
+          </div>
+          <div class="fin-row total">
+            <span>Valor total:</span>
+            <span>{{ formatCurrency(quotation.total) }}</span>
+          </div>
+        </div>
+
         <!-- Plazo y Garantía -->
         <div class="terms-section">
           <div *ngIf="quotation.plazoEjecucion" class="term-item">
@@ -414,24 +434,24 @@ import { QuotationItemService } from '../../services/quotation-item.service';
     .col-total { width: 20%; text-align: right; font-weight: bold; }
 
     .financial-summary {
-      margin: 2rem 0;
-      padding: 1.5rem;
-      background: #f5f5f5;
-      border-radius: 8px;
+      width: 400px;
+      margin: 2rem 0 2rem auto;
+      padding: 1rem;
     }
 
-    .summary-row {
+    .fin-row {
       display: flex;
       justify-content: space-between;
       padding: 0.5rem 0;
+      font-size: 11pt;
     }
 
-    .summary-row.total {
+    .fin-row.total {
       border-top: 2px solid #1890ff;
       margin-top: 0.5rem;
       padding-top: 1rem;
-      font-size: 14pt;
       font-weight: bold;
+      font-size: 14pt;
       color: #1890ff;
     }
 
