@@ -40,7 +40,7 @@ jobs:
           action: upload
           app_location: "/"
           api_location: ""
-          output_location: "dist/soluciones-recidenciales-web/browser"
+          output_location: "dist/SolucionesRecidencialesWeb"
           github_id_token: ${{ steps.idtoken.outputs.result }}
 
   close_pull_request_job:
