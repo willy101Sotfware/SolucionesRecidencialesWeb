@@ -439,6 +439,9 @@ export class QuotationFormComponent implements OnInit {
   ) {
     this.quotationForm = this.fb.group({
       numero: ['', Validators.required],
+      // Inicializamos fecha con hoy en formato ISO; antes el backend la guardaba
+      // como null y el detalle mostraba "Invalid Date".
+      fecha: [new Date().toISOString()],
       idEdificio: ['', Validators.required],
       asunto: ['Cotización'],
       cordialSaludo: ['Cordial saludo,'],
@@ -497,6 +500,11 @@ export class QuotationFormComponent implements OnInit {
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
     this.currentFecha = now.toLocaleDateString('es-ES', options);
+    // Si por alguna razón se resetó el control fecha (p. ej. patchValue al cargar
+    // una cotización existente sin fecha), nos aseguramos de mantener un valor válido.
+    if (!this.quotationForm.get('fecha')?.value) {
+      this.quotationForm.patchValue({ fecha: now.toISOString() }, { emitEvent: false });
+    }
   }
 
   onEmpresaChange(event: any): void {
@@ -695,8 +703,13 @@ export class QuotationFormComponent implements OnInit {
         const showPlazo = quotation.showPlazo === 1;
         const showGarantia = quotation.showGarantia === 1;
 
+        // Si la cotización guardada no tiene fecha, usamos hoy para que al
+        // actualizar se guarde una fecha válida (antes el detalle mostraba "Invalid Date").
+        const fecha = quotation.fecha || quotation.createdAt || new Date().toISOString();
+
         this.quotationForm.patchValue({
           ...quotation,
+          fecha,
           showPlazoCheckbox: showPlazo,
           showGarantiaCheckbox: showGarantia
         });
