@@ -47,7 +47,7 @@ import { QuotationItemService } from '../../services/quotation-item.service';
         <!-- Fecha y Número -->
         <div class="doc-meta">
           <div class="date">
-            Medellín, {{ formatDate(quotation.createdAt ?? quotation.fecha ?? '') }}
+            Medellín, {{ formatDate(quotation.createdAt ?? quotation.fecha) }}
           </div>
           <div class="quotation-number">
             {{ quotation.numero }}
@@ -538,13 +538,24 @@ export class QuotationViewComponent implements OnInit {
     });
   }
 
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-CO', {
+  formatDate(dateString?: string | null): string {
+    const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
-    });
+    };
+
+    if (dateString) {
+      const date = new Date(dateString);
+      // Algunos backends mandan "0001-01-01..." cuando no hay fecha real;
+      // descartamos años anteriores a 1970 (epoch) además de los Date inválidos.
+      if (!isNaN(date.getTime()) && date.getFullYear() >= 1970) {
+        return date.toLocaleDateString('es-CO', options);
+      }
+    }
+
+    // Fallback: si la cotización no trae fecha o es inválida, mostrar la del día.
+    return new Date().toLocaleDateString('es-CO', options);
   }
 
   formatCurrency(value: number | null | undefined): string {

@@ -2,7 +2,7 @@ import { CommonModule, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BuildingResponse, CompanyResponse, CreateQuotationItemRequest, CreateQuotationRequest, QuotationItemResponse, QuotationResponse, UpdateQuotationRequest } from '../../../../core/models';
+import { BuildingResponse, CompanyResponse, CreateQuotationItemRequest, CreateQuotationRequest, QuotationItemResponse, QuotationResponse, UpdateQuotationItemRequest, UpdateQuotationRequest } from '../../../../core/models';
 import { BuildingService } from '../../../buildings/services/building.service';
 import { CompanyService } from '../../../companies/services/company.service';
 import { QuotationItemService } from '../../services/quotation-item.service';
@@ -382,6 +382,9 @@ export class QuotationFormComponent implements OnInit {
 
   // Items
   items: QuotationItemResponse[] = [];
+  // Snapshot de los ítems que ya existían al cargar la cotización (modo edición)
+  // para poder distinguir nuevos / actualizados / eliminados al guardar.
+  private originalItemIds: Set<number> = new Set<number>();
   newItemText = '';
   showAdvancedItemModal = false;
   advancedItem: Partial<QuotationItemResponse> = {};
@@ -436,6 +439,9 @@ export class QuotationFormComponent implements OnInit {
   ) {
     this.quotationForm = this.fb.group({
       numero: ['', Validators.required],
+      // Inicializamos fecha con hoy en formato ISO; antes el backend la guardaba
+      // como null y el detalle mostraba "Invalid Date".
+      fecha: [new Date().toISOString()],
       idEdificio: ['', Validators.required],
       asunto: ['Cotización'],
       cordialSaludo: ['Cordial saludo,'],
@@ -494,6 +500,11 @@ export class QuotationFormComponent implements OnInit {
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
     this.currentFecha = now.toLocaleDateString('es-ES', options);
+    // Si por alguna razón se resetó el control fecha (p. ej. patchValue al cargar
+    // una cotización existente sin fecha), nos aseguramos de mantener un valor válido.
+    if (!this.quotationForm.get('fecha')?.value) {
+      this.quotationForm.patchValue({ fecha: now.toISOString() }, { emitEvent: false });
+    }
   }
 
   onEmpresaChange(event: any): void {
@@ -595,13 +606,17 @@ export class QuotationFormComponent implements OnInit {
 
   recalcularValorObra(): void {
     const sumaTotal = this.items.reduce((sum, item) => {
-      return sum + (item.valorTotal || 0);
+      return sum + (Number(item.valorTotal) || 0);
     }, 0);
 
-    // Solo actualizar valorObra si hay items con valorTotal (modo Avanzado)
-    // En modo Simple, el usuario escribe el valor manualmente
-    if (sumaTotal > 0) {
-      this.quotationForm.patchValue({ valorObra: sumaTotal });
+    const hayItemsConValor = this.items.some(item => Number(item.valorTotal) > 0);
+
+    // Modo Avanzado: si al menos un ítem tiene valorTotal, sincronizamos
+    // valorObra con la suma de los ítems (incluyendo cuando la suma queda en 0
+    // porque el usuario eliminar el único ítem con valor).
+    // Modo Simple: si ningún ítem tiene valorTotal, respetamos el valor manual.
+    if (hayItemsConValor || sumaTotal > 0) {
+      this.quotationForm.patchValue({ valorObra: sumaTotal }, { emitEvent: false });
     }
     this.calculateTotals();
   }
@@ -670,10 +685,14 @@ export class QuotationFormComponent implements OnInit {
         // Cargar items (algunos endpoints no retornan quotationItems anidados)
         if (quotation.quotationItems && quotation.quotationItems.length > 0) {
           this.items = quotation.quotationItems;
+          this.snapshotOriginalItems();
+          this.recalcularValorObra();
         } else {
           this.quotationItemService.getByQuotationId(this.quotationId!).subscribe({
             next: (items) => {
               this.items = items || [];
+              this.snapshotOriginalItems();
+              this.recalcularValorObra();
               this.cdr.detectChanges();
             },
             error: (err) => console.error('Error cargando ítems de cotización', err)
@@ -684,8 +703,13 @@ export class QuotationFormComponent implements OnInit {
         const showPlazo = quotation.showPlazo === 1;
         const showGarantia = quotation.showGarantia === 1;
 
+        // Si la cotización guardada no tiene fecha, usamos hoy para que al
+        // actualizar se guarde una fecha válida (antes el detalle mostraba "Invalid Date").
+        const fecha = quotation.fecha || quotation.createdAt || new Date().toISOString();
+
         this.quotationForm.patchValue({
           ...quotation,
+          fecha,
           showPlazoCheckbox: showPlazo,
           showGarantiaCheckbox: showGarantia
         });
@@ -767,9 +791,19 @@ export class QuotationFormComponent implements OnInit {
   }
 
   saveQuotationItems(quotationId: number): void {
-    // Guardar cada ítem
-    const itemPromises = this.items.map(item => {
-      const itemRequest: CreateQuotationItemRequest = {
+    // Sincroniza el listado de ítems con el backend respetando lo que ya existía:
+    //   - ítems con id > 0 que ya estaban cargados      -> PUT (update)
+    //   - ítems con id == 0 (agregados en el formulario) -> POST (create)
+    //   - ids originales que ya no están en this.items   -> DELETE
+    const currentIds = new Set<number>(
+      this.items.map(item => item.id).filter((id): id is number => typeof id === 'number' && id > 0)
+    );
+    const idsToDelete = Array.from(this.originalItemIds).filter(id => !currentIds.has(id));
+
+    const requests: Promise<unknown>[] = [];
+
+    for (const item of this.items) {
+      const basePayload = {
         idCotizacion: quotationId,
         descripcion: item.descripcion,
         cantidad: item.cantidad,
@@ -782,10 +816,21 @@ export class QuotationFormComponent implements OnInit {
         garantia: item.garantia,
         showGarantia: item.showGarantia
       };
-      return this.quotationItemService.create(itemRequest).toPromise();
-    });
 
-    Promise.all(itemPromises)
+      if (item.id && item.id > 0 && this.originalItemIds.has(item.id)) {
+        const updateRequest: UpdateQuotationItemRequest = { id: item.id, ...basePayload };
+        requests.push(this.quotationItemService.update(item.id, updateRequest).toPromise());
+      } else {
+        const createRequest: CreateQuotationItemRequest = basePayload;
+        requests.push(this.quotationItemService.create(createRequest).toPromise());
+      }
+    }
+
+    for (const id of idsToDelete) {
+      requests.push(this.quotationItemService.delete(id).toPromise());
+    }
+
+    Promise.all(requests)
       .then(() => {
         this.isLoading = false;
         this.router.navigate(['/quotations']);
@@ -795,5 +840,13 @@ export class QuotationFormComponent implements OnInit {
         this.errorMessage = 'Error al guardar los ítems.';
         console.error(err);
       });
+  }
+
+  private snapshotOriginalItems(): void {
+    this.originalItemIds = new Set<number>(
+      this.items
+        .map(item => item.id)
+        .filter((id): id is number => typeof id === 'number' && id > 0)
+    );
   }
 }
