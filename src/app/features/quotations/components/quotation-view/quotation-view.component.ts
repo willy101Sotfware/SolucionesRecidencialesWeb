@@ -547,7 +547,9 @@ export class QuotationViewComponent implements OnInit {
 
     if (dateString) {
       const date = new Date(dateString);
-      if (!isNaN(date.getTime())) {
+      // Algunos backends mandan "0001-01-01..." cuando no hay fecha real;
+      // descartamos años anteriores a 1970 (epoch) además de los Date inválidos.
+      if (!isNaN(date.getTime()) && date.getFullYear() >= 1970) {
         return date.toLocaleDateString('es-CO', options);
       }
     }
