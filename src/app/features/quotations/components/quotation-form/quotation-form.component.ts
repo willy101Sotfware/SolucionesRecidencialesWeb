@@ -498,11 +498,9 @@ export class QuotationFormComponent implements OnInit {
 
   onEmpresaChange(event: any): void {
     const empresaId = Number(event.target.value);
-    if (empresaId) {
-      this.filteredBuildings = this.allBuildings.filter(b => b.companyId === empresaId);
-    } else {
-      this.filteredBuildings = this.allBuildings;
-    }
+    this.filteredBuildings = empresaId
+      ? this.allBuildings.filter(b => b.companyId === empresaId)
+      : this.allBuildings;
     this.quotationForm.patchValue({ idEdificio: '' });
     this.selectedEdificio = null;
   }
@@ -669,9 +667,17 @@ export class QuotationFormComponent implements OnInit {
 
     this.quotationService.getById(this.quotationId).subscribe({
       next: (quotation: QuotationResponse) => {
-        // Cargar items
-        if (quotation.quotationItems) {
+        // Cargar items (algunos endpoints no retornan quotationItems anidados)
+        if (quotation.quotationItems && quotation.quotationItems.length > 0) {
           this.items = quotation.quotationItems;
+        } else {
+          this.quotationItemService.getByQuotationId(this.quotationId!).subscribe({
+            next: (items) => {
+              this.items = items || [];
+              this.cdr.detectChanges();
+            },
+            error: (err) => console.error('Error cargando ítems de cotización', err)
+          });
         }
 
         // Cargar checkboxes
@@ -690,9 +696,10 @@ export class QuotationFormComponent implements OnInit {
           if (edificio) {
             this.selectedEdificio = edificio;
 
-            // Seleccionar empresa
+            // Filtrar edificios por empresa sin resetear el idEdificio cargado
             if (edificio.companyId) {
-              this.onEmpresaChange({ target: { value: edificio.companyId } });
+              this.filteredBuildings = this.allBuildings.filter(b => b.companyId === edificio.companyId);
+              this.quotationForm.patchValue({ idEdificio: quotation.idEdificio });
             }
           }
         }
