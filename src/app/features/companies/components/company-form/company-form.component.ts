@@ -216,6 +216,17 @@ import { CreateCompanyRequest, UpdateCompanyRequest, CompanyResponse } from '../
       padding-top: 20px;
       border-top: 1px solid #e2e8f0;
     }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .page-container { padding: 12px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .page-header h2 { font-size: 1.2rem; }
+      .form-container { padding: 16px; }
+      .form-row { flex-direction: column; gap: 12px; }
+      .form-actions { flex-direction: column; }
+      .form-actions .btn { width: 100%; text-align: center; }
+    }
   `]
 })
 export class CompanyFormComponent implements OnInit {

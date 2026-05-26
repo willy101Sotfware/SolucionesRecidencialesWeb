@@ -497,6 +497,32 @@ import { QuotationItemService } from '../../services/quotation-item.service';
       border-left: 4px solid #faad14;
       font-size: 10pt;
     }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .quotation-view-container { padding: 0.5rem; }
+      .action-bar { flex-direction: column; gap: 8px; padding: 0.75rem; }
+      .action-bar .btn { width: 100%; text-align: center; }
+
+      .quotation-document {
+        max-width: 100%;
+        padding: 3mm 5mm;
+        font-size: 9pt;
+      }
+
+      .company-name { font-size: 16pt; }
+      .doc-meta { flex-direction: column; gap: 8px; }
+      .quotation-number { font-size: 11pt; }
+
+      .items-table { font-size: 8pt; }
+      .items-table th, .items-table td { padding: 4px 6px; }
+      .col-img { width: 35px; }
+      .item-image-cell { width: 30px; height: 30px; }
+
+      .financial-summary { width: 100% !important; }
+
+      .signature-image { width: 130px; }
+    }
   `]
 })
 export class QuotationViewComponent implements OnInit {

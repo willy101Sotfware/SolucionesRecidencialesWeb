@@ -365,6 +365,20 @@ import { QuotationService } from '../../services/quotation.service';
       .form-layout { grid-template-columns: 1fr; }
       .financial-column { position: static; }
     }
+
+    @media (max-width: 768px) {
+      .page-container { padding: 12px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .page-header h2 { font-size: 1.2rem; }
+      .form-section { padding: 14px; }
+      .form-row { flex-direction: column; gap: 10px; }
+      .form-actions { flex-direction: column; }
+      .form-actions .btn { width: 100%; text-align: center; }
+      .financial-summary { width: 100% !important; }
+      .add-item-section textarea { font-size: 0.9rem; }
+      .modal-content { width: 95%; padding: 16px; margin: 10px; }
+      .modal-content .form-row { flex-direction: column; }
+    }
   `]
 })
 export class QuotationFormComponent implements OnInit {

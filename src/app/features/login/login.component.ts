@@ -64,7 +64,9 @@ import { LoginRequest } from '../../core/models';
       align-items: center;
       min-height: 100vh;
       background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+      padding: 20px;
     }
+
     .login-box {
       background: white;
       padding: 40px;
@@ -73,36 +75,44 @@ import { LoginRequest } from '../../core/models';
       width: 100%;
       max-width: 400px;
     }
+
     .login-header {
       text-align: center;
       margin-bottom: 30px;
     }
+
     .login-logo {
       width: 220px;
       margin-bottom: 15px;
     }
+
     .login-header h2 {
       color: #1e3a5f;
       margin: 0 0 10px 0;
     }
+
     .login-header p {
       color: #718096;
       margin: 0;
     }
+
     .login-form {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
+
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+
     .form-group label {
       font-weight: 500;
       color: #2d3748;
     }
+
     .form-group input {
       padding: 12px;
       border: 2px solid #e2e8f0;
@@ -110,17 +120,21 @@ import { LoginRequest } from '../../core/models';
       font-size: 1rem;
       transition: border-color 0.3s;
     }
+
     .form-group input:focus {
       outline: none;
       border-color: #2c5282;
     }
+
     .form-group input.error {
       border-color: #e53e3e;
     }
+
     .error-message {
       color: #e53e3e;
       font-size: 0.85rem;
     }
+
     .error-alert {
       background: #fed7d7;
       color: #c53030;
@@ -128,6 +142,7 @@ import { LoginRequest } from '../../core/models';
       border-radius: 8px;
       text-align: center;
     }
+
     .login-btn {
       background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%);
       color: white;
@@ -139,13 +154,36 @@ import { LoginRequest } from '../../core/models';
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
+
     .login-btn:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(44, 82, 130, 0.3);
     }
+
     .login-btn:disabled {
       opacity: 0.7;
       cursor: not-allowed;
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 16px;
+        align-items: flex-start;
+        padding-top: 40px;
+      }
+
+      .login-box {
+        padding: 24px;
+      }
+
+      .login-logo {
+        width: 180px;
+      }
+
+      .login-header h2 {
+        font-size: 1.2rem;
+      }
     }
   `]
 })

@@ -26,41 +26,43 @@ import { CompanyService } from '../../services/company.service';
       </div>
 
       <div class="table-container" *ngIf="!isLoading">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>NIT</th>
-              <th>Email</th>
-              <th>Teléfono</th>
-              <th>Dirección</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let company of companies">
-              <td>{{ company.nombre }}</td>
-              <td>{{ company.nit || '-' }}</td>
-              <td>{{ company.email || '-' }}</td>
-              <td>{{ company.telefono || '-' }}</td>
-              <td>{{ company.direccion || '-' }}</td>
-              <td>
-                <span class="badge" [class.active]="company.activo === 1" [class.inactive]="company.activo !== 1">
-                  {{ company.activo === 1 ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td class="actions">
-                <a [routerLink]="['/companies/edit', company.idEmpresa]" class="btn btn-sm btn-edit">
-                  Editar
-                </a>
-                <button class="btn btn-sm btn-delete" (click)="deleteCompany(company.idEmpresa)">
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>NIT</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let company of companies">
+                <td>{{ company.nombre }}</td>
+                <td>{{ company.nit || '-' }}</td>
+                <td>{{ company.email || '-' }}</td>
+                <td>{{ company.telefono || '-' }}</td>
+                <td>{{ company.direccion || '-' }}</td>
+                <td>
+                  <span class="badge" [class.active]="company.activo === 1" [class.inactive]="company.activo !== 1">
+                    {{ company.activo === 1 ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <a [routerLink]="['/companies/edit', company.idEmpresa]" class="btn btn-sm btn-edit">
+                    Editar
+                  </a>
+                  <button class="btn btn-sm btn-delete" (click)="deleteCompany(company.idEmpresa)">
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="empty-state" *ngIf="companies.length === 0">
           <p>No hay empresas registradas.</p>
@@ -70,19 +72,18 @@ import { CompanyService } from '../../services/company.service';
     </div>
   `,
   styles: [`
-    .page-container {
-      padding: 20px;
-    }
+    .page-container { padding: 20px; }
+
     .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .page-header h2 {
-      margin: 0;
-      color: #1e3a5f;
-    }
+    .page-header h2 { margin: 0; color: #1e3a5f; }
+
     .btn {
       padding: 10px 20px;
       border-radius: 6px;
@@ -91,42 +92,34 @@ import { CompanyService } from '../../services/company.service';
       border: none;
       font-size: 0.9rem;
       transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
     }
-    .btn-primary {
-      background: #2c5282;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #1e3a5f;
-    }
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 0.8rem;
-    }
-    .btn-edit {
-      background: #3182ce;
-      color: white;
-      margin-right: 5px;
-    }
-    .btn-edit:hover {
-      background: #2c5282;
-    }
-    .btn-delete {
-      background: #e53e3e;
-      color: white;
-    }
-    .btn-delete:hover {
-      background: #c53030;
-    }
+    .btn-primary { background: #2c5282; color: white; }
+    .btn-primary:hover { background: #1e3a5f; }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-edit { background: #3182ce; color: white; margin-right: 5px; }
+    .btn-edit:hover { background: #2c5282; }
+    .btn-delete { background: #e53e3e; color: white; }
+    .btn-delete:hover { background: #c53030; }
+
     .table-container {
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       overflow: hidden;
     }
+
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .data-table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 700px;
     }
     .data-table th {
       background: #f7fafc;
@@ -141,46 +134,30 @@ import { CompanyService } from '../../services/company.service';
       border-bottom: 1px solid #e2e8f0;
       color: #4a5568;
     }
-    .data-table tr:hover {
-      background: #f7fafc;
-    }
+    .data-table tr:hover { background: #f7fafc; }
+
     .badge {
       padding: 4px 10px;
       border-radius: 12px;
       font-size: 0.75rem;
       font-weight: 500;
     }
-    .badge.active {
-      background: #c6f6d5;
-      color: #22543d;
-    }
-    .badge.inactive {
-      background: #fed7d7;
-      color: #742a2a;
-    }
-    .actions {
-      display: flex;
-      gap: 5px;
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #718096;
-    }
-    .error-message {
-      background: #fed7d7;
-      color: #c53030;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #718096;
-    }
-    .empty-state p {
-      margin-bottom: 20px;
+    .badge.active { background: #c6f6d5; color: #22543d; }
+    .badge.inactive { background: #fed7d7; color: #742a2a; }
+
+    .actions { display: flex; gap: 5px; white-space: nowrap; }
+
+    .loading { text-align: center; padding: 40px; color: #718096; }
+    .error-message { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #718096; }
+    .empty-state p { margin-bottom: 20px; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .page-container { padding: 12px; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .page-header h2 { font-size: 1.2rem; }
+      .btn { font-size: 0.85rem; padding: 8px 16px; }
     }
   `]
 })
@@ -194,15 +171,12 @@ export class CompanyListComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) { }
 
-  ngOnInit(): void {
-    this.loadCompanies();
-  }
+  ngOnInit(): void { this.loadCompanies(); }
 
   loadCompanies(): void {
     this.isLoading = true;
     this.errorMessage = '';
     this.cdr.detectChanges();
-
     this.companyService.getAll().subscribe({
       next: (data: CompanyResponse[]) => {
         this.companies = data;
@@ -221,9 +195,7 @@ export class CompanyListComponent implements OnInit {
   deleteCompany(id: number): void {
     if (confirm('¿Está seguro de que desea eliminar esta empresa?')) {
       this.companyService.delete(id).subscribe({
-        next: () => {
-          this.loadCompanies();
-        },
+        next: () => { this.loadCompanies(); },
         error: (error) => {
           console.error('Error deleting company:', error);
           alert('Error al eliminar la empresa.');

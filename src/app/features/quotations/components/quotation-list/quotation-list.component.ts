@@ -17,54 +17,61 @@ import { QuotationService } from '../../services/quotation.service';
       <div class="loading" *ngIf="isLoading"><p>Cargando cotizaciones...</p></div>
       <div class="error-message" *ngIf="errorMessage && errorMessage.length > 0">{{ errorMessage }}</div>
       <div class="table-container" *ngIf="!isLoading">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Número</th>
-              <th>Fecha</th>
-              <th>Edificio</th>
-              <th>Descripción</th>
-              <th>Total</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let quotation of quotations">
-              <td>{{ quotation.numero }}</td>
-              <td>{{ quotation.fecha || '-' }}</td>
-              <td>{{ quotation.buildingName || '-' }}</td>
-              <td>{{ quotation.descripcionObra || '-' | slice:0:50 }}{{ quotation.descripcionObra && quotation.descripcionObra.length > 50 ? '...' : '' }}</td>
-              <td>{{ quotation.total | currency:'COP':'symbol':'1.0-0' }}</td>
-              <td class="actions">
-                <a [routerLink]="['/quotations/view', quotation.id]" class="btn btn-sm btn-view">Ver</a>
-                <a [routerLink]="['/quotations/edit', quotation.id]" class="btn btn-sm btn-edit">Editar</a>
-                <button class="btn btn-sm btn-delete" (click)="deleteQuotation(quotation.id)">Eliminar</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Número</th><th>Fecha</th><th>Edificio</th><th>Descripción</th><th>Total</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let quotation of quotations">
+                <td>{{ quotation.numero }}</td>
+                <td>{{ quotation.fecha || '-' }}</td>
+                <td>{{ quotation.buildingName || '-' }}</td>
+                <td>{{ quotation.descripcionObra || '-' | slice:0:50 }}{{ quotation.descripcionObra && quotation.descripcionObra.length > 50 ? '...' : '' }}</td>
+                <td>{{ quotation.total | currency:'COP':'symbol':'1.0-0' }}</td>
+                <td class="actions">
+                  <a [routerLink]="['/quotations/view', quotation.id]" class="btn btn-sm btn-view">Ver</a>
+                  <a [routerLink]="['/quotations/edit', quotation.id]" class="btn btn-sm btn-edit">Editar</a>
+                  <button class="btn btn-sm btn-delete" (click)="deleteQuotation(quotation.id)">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="empty-state" *ngIf="quotations.length === 0"><p>No hay cotizaciones registradas.</p><a routerLink="/quotations/new" class="btn btn-primary">Crear primera cotización</a></div>
       </div>
     </div>
   `,
   styles: [`
     .page-container { padding: 20px; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 12px; }
     .page-header h2 { margin: 0; color: #1e3a5f; }
-    .btn { padding: 10px 20px; border-radius: 6px; text-decoration: none; cursor: pointer; border: none; font-size: 0.9rem; }
+    .btn { padding: 10px 20px; border-radius: 6px; text-decoration: none; cursor: pointer; border: none; font-size: 0.9rem; display: inline-flex; align-items: center; white-space: nowrap; }
     .btn-primary { background: #2c5282; color: white; }
     .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
     .btn-view { background: #38a169; color: white; margin-right: 5px; }
     .btn-edit { background: #3182ce; color: white; margin-right: 5px; }
     .btn-delete { background: #e53e3e; color: white; }
+
     .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-    .data-table { width: 100%; border-collapse: collapse; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 650px; }
     .data-table th { background: #f7fafc; padding: 15px; text-align: left; font-weight: 600; color: #2d3748; border-bottom: 2px solid #e2e8f0; }
     .data-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; color: #4a5568; }
-    .actions { display: flex; gap: 5px; }
+    .actions { display: flex; gap: 5px; white-space: nowrap; }
     .loading { text-align: center; padding: 40px; color: #718096; }
     .error-message { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     .empty-state { text-align: center; padding: 60px 20px; color: #718096; }
+
+    @media (max-width: 768px) {
+      .page-container { padding: 12px; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .page-header h2 { font-size: 1.2rem; }
+      .btn { font-size: 0.85rem; padding: 8px 16px; }
+      .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+    }
   `]
 })
 export class QuotationListComponent implements OnInit {
@@ -72,28 +79,14 @@ export class QuotationListComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
 
-  constructor(
-    private quotationService: QuotationService,
-    private cdr: ChangeDetectorRef
-  ) { }
-
+  constructor(private quotationService: QuotationService, private cdr: ChangeDetectorRef) { }
   ngOnInit(): void { this.loadQuotations(); }
 
   loadQuotations(): void {
-    this.isLoading = true;
-    this.cdr.detectChanges();
+    this.isLoading = true; this.cdr.detectChanges();
     this.quotationService.getAll().subscribe({
-      next: (data: QuotationResponse[]) => { 
-        this.quotations = data; 
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error: unknown) => { 
-        this.isLoading = false; 
-        this.errorMessage = 'Error al cargar las cotizaciones.'; 
-        this.cdr.detectChanges();
-        console.error(error); 
-      }
+      next: (data: QuotationResponse[]) => { this.quotations = data; this.isLoading = false; this.cdr.detectChanges(); },
+      error: (error: unknown) => { this.isLoading = false; this.errorMessage = 'Error al cargar las cotizaciones.'; this.cdr.detectChanges(); console.error(error); }
     });
   }
 

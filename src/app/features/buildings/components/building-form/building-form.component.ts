@@ -89,6 +89,16 @@ import { BuildingResponse, CompanyResponse, CreateBuildingRequest, UpdateBuildin
     .checkbox-group { flex-direction: row; align-items: center; }
     .error-alert { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 6px; }
     .form-actions { display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+
+    @media (max-width: 768px) {
+      .page-container { padding: 12px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .page-header h2 { font-size: 1.2rem; }
+      .form-container { padding: 16px; }
+      .form-row { flex-direction: column; gap: 12px; }
+      .form-actions { flex-direction: column; }
+      .form-actions .btn { width: 100%; text-align: center; }
+    }
   `]
 })
 export class BuildingFormComponent implements OnInit {
