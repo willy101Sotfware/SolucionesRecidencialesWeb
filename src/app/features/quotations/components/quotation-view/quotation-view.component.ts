@@ -139,6 +139,9 @@ import { QuotationItemService } from '../../services/quotation-item.service';
 
         <!-- Firma -->
         <div class="signature-section">
+          <img src="assets/Images/Logos/firma.png"
+               alt="Firma"
+               class="signature-image" />
           <p class="signature-name">{{ quotation.firmaNombre }}</p>
           <p class="signature-role">{{ quotation.firmaCargo }}</p>
           <p class="signature-phone">{{ quotation.firmaCelular }}</p>
@@ -470,6 +473,11 @@ import { QuotationItemService } from '../../services/quotation-item.service';
       margin-top: 3rem;
       padding-top: 2rem;
       border-top: 1px solid #e8e8e8;
+    }
+
+    .signature-image {
+      width: 180px;
+      margin-bottom: 1rem;
     }
 
     .signature-name {
