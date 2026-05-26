@@ -128,11 +128,11 @@ import { QuotationItemService } from '../../services/quotation-item.service';
         </div>
 
         <!-- Plazo y Garantía -->
-        <div class="terms-section">
-          <div *ngIf="quotation.plazoEjecucion" class="term-item">
-            <strong>Plazo de Ejecución:</strong> {{ quotation.plazoEjecucion }}
+        <div class="terms-section" *ngIf="(quotation.showPlazo && quotation.plazoEntrega) || (quotation.showGarantia && quotation.garantia)">
+          <div *ngIf="quotation.showPlazo && quotation.plazoEntrega" class="term-item">
+            <strong>Plazo de Entrega:</strong> {{ quotation.plazoEntrega }}
           </div>
-          <div *ngIf="quotation.garantia" class="term-item">
+          <div *ngIf="quotation.showGarantia && quotation.garantia" class="term-item">
             <strong>Garantía:</strong> {{ quotation.garantia }}
           </div>
         </div>
