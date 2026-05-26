@@ -703,6 +703,10 @@ export class QuotationFormComponent implements OnInit {
         const showPlazo = quotation.showPlazo === 1;
         const showGarantia = quotation.showGarantia === 1;
 
+        // Auto-llenar defaults si el checkbox está marcado pero el texto está vacío
+        const plazoEntrega = quotation.plazoEntrega || (showPlazo ? '15 días hábiles' : '');
+        const garantia = quotation.garantia || (showGarantia ? '12 meses' : '');
+
         // Si la cotización guardada no tiene fecha, usamos hoy para que al
         // actualizar se guarde una fecha válida (antes el detalle mostraba "Invalid Date").
         const fecha = quotation.fecha || quotation.createdAt || new Date().toISOString();
@@ -710,6 +714,8 @@ export class QuotationFormComponent implements OnInit {
         this.quotationForm.patchValue({
           ...quotation,
           fecha,
+          plazoEntrega,
+          garantia,
           showPlazoCheckbox: showPlazo,
           showGarantiaCheckbox: showGarantia
         });
