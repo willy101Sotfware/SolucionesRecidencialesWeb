@@ -30,7 +30,7 @@ import { QuotationItemService } from '../../services/quotation-item.service';
         <div class="doc-header">
           <div class="logo-section">
             <div class="company-logo">
-              <img src="assets/images/logo.png" alt="Soluciones Residenciales"
+              <img src="assets/Images/Icons/ICO.png" alt="Soluciones Residenciales"
                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
               <div class="logo-placeholder" style="display: none;">
                 <span class="logo-icon">🏢</span>

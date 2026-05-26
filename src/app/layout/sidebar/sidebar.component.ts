@@ -2,6 +2,7 @@ import { AsyncPipe, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { IdleTimeoutService } from '../../core/services/idle-timeout.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -10,6 +11,9 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <aside class="sidebar">
       <div class="logo">
+        <img src="assets/Images/Logos/SOLUCIONES RECIDENCIALES FONDO NEGRO.png"
+             alt="Soluciones Residenciales"
+             class="sidebar-logo" />
         <h2>Soluciones Residenciales</h2>
       </div>
       <nav class="nav-menu">
@@ -51,6 +55,11 @@ import { AuthService } from '../../core/services/auth.service';
       padding: 0 20px 20px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
       margin-bottom: 20px;
+      text-align: center;
+    }
+    .sidebar-logo {
+      width: 180px;
+      margin-bottom: 10px;
     }
     .logo h2 {
       font-size: 1.2rem;
@@ -109,9 +118,13 @@ import { AuthService } from '../../core/services/auth.service';
   `]
 })
 export class SidebarComponent {
-  constructor(public authService: AuthService) { }
+  constructor(
+    public authService: AuthService,
+    private idleTimeout: IdleTimeoutService
+  ) { }
 
   logout(): void {
+    this.idleTimeout.stop();
     this.authService.logout();
     window.location.href = '/login';
   }

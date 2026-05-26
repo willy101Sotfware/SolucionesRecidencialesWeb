@@ -13,6 +13,9 @@ import { LoginRequest } from '../../core/models';
     <div class="login-container">
       <div class="login-box">
         <div class="login-header">
+          <img src="assets/Images/Logos/SOLUCIONES RECIDENCIALES FONDO NEGRO.png"
+               alt="Soluciones Residenciales"
+               class="login-logo" />
           <h2>Soluciones Residenciales</h2>
           <p>Inicie sesión para continuar</p>
         </div>
@@ -73,6 +76,10 @@ import { LoginRequest } from '../../core/models';
     .login-header {
       text-align: center;
       margin-bottom: 30px;
+    }
+    .login-logo {
+      width: 220px;
+      margin-bottom: 15px;
     }
     .login-header h2 {
       color: #1e3a5f;

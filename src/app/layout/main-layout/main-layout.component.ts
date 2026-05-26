@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
+import { IdleTimeoutService } from '../../core/services/idle-timeout.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -37,4 +38,14 @@ import { HeaderComponent } from '../header/header.component';
     }
   `]
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent implements OnInit, OnDestroy {
+  constructor(private idleTimeout: IdleTimeoutService) {}
+
+  ngOnInit(): void {
+    this.idleTimeout.init();
+  }
+
+  ngOnDestroy(): void {
+    this.idleTimeout.stop();
+  }
+}
