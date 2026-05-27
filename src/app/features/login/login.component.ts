@@ -215,9 +215,17 @@ export class LoginComponent {
       next: () => {
         this.router.navigate(['/companies']);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Error al iniciar sesión. Verifique sus credenciales.';
+        if (error.isServerDown) {
+          this.errorMessage = 'El servidor está iniciando (modo suspensión). Intente de nuevo en unos segundos.';
+        } else if (error.status === 401) {
+          this.errorMessage = 'Usuario o contraseña incorrectos.';
+        } else if (error.status === 0 || error.name === 'TimeoutError') {
+          this.errorMessage = 'El servidor no responde después de varios intentos. Intente de nuevo en unos segundos.';
+        } else {
+          this.errorMessage = error.error?.message || 'Error al iniciar sesión. Intente nuevamente.';
+        }
       }
     });
   }
