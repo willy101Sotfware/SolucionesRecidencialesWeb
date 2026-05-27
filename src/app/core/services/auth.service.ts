@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, timeout, throwError, timer } from 'rxjs';
-import { retry, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError, timer, timeout } from 'rxjs';
+import { tap, retryWhen, concatMap, catchError } from 'rxjs/operators';
 import { ApiConfigService } from './api-config.service';
 import { LoginRequest, LoginResponse, UserResponse } from '../models';
 
@@ -31,33 +31,37 @@ export class AuthService {
 
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, request).pipe(
-      // 45s timeout — enough for Azure cold start (~15-30s), prevents hanging forever
+      // 45s timeout — enough for Azure cold start (~15-30s)
       timeout(45000),
       // Retry up to 2 more times (3 total) with exponential backoff
-      // Only retry on timeout or server errors (5xx), NOT on bad credentials (401/403)
-      retry({
-        count: 2,
-        delay: (error: HttpErrorResponse, retryCount: number) => {
-          if (error.status === 401 || error.status === 403) {
-            // Wrong credentials — don't retry, fail immediately
-            return throwError(() => error);
-          }
-          // Exponential backoff: 2s, 4s, 8s (capped)
-          const delayMs = Math.min(1000 * Math.pow(2, retryCount), 8000);
-          return timer(delayMs);
-        }
-      }),
-      catchError((error: HttpErrorResponse) => {
-        // Enrich the error so login component can show a better message
+      // Only retries on timeout/network/server errors, NOT on 401/403
+      retryWhen((errors: Observable<HttpErrorResponse>) =>
+        errors.pipe(
+          concatMap((error: HttpErrorResponse, attempt: number) => {
+            // Wrong credentials — stop retrying immediately
+            if (error.status === 401 || error.status === 403) {
+              return throwError(() => error);
+            }
+            // Give up after 3 total attempts
+            if (attempt >= 2) {
+              return throwError(() => error);
+            }
+            // Exponential backoff: 2s, 4s
+            const delayMs = Math.min(1000 * Math.pow(2, attempt), 8000);
+            return timer(delayMs);
+          })
+        )
+      ),
+      // Enrich error so login component shows the right message
+      catchError((error: any) => {
         if (error.name === 'TimeoutError' || error.status === 0) {
-          return throwError(() => ({
-            ...error,
-            isServerDown: true
-          }));
+          // Server is down/cold-starting — add flag for the UI
+          return throwError(() => Object.assign({}, error, { isServerDown: true }));
         }
         return throwError(() => error);
       }),
-      tap(response => {
+      // Store token and user on success
+      tap((response: LoginResponse) => {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         this.currentUserSubject.next(response.user);

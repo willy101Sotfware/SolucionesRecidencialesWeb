@@ -1,14 +1,13 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { IdleTimeoutService } from '../../core/services/idle-timeout.service';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, HeaderComponent, NgIf],
+  imports: [RouterOutlet, SidebarComponent, HeaderComponent],
   template: `
     <div class="app-container">
       <!-- Mobile overlay backdrop -->
