@@ -1,9 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgIf } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { timeout, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginRequest } from '../../core/models';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -187,7 +191,7 @@ import { LoginRequest } from '../../core/models';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -195,12 +199,22 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required]
     });
+  }
+
+  ngOnInit(): void {
+    // Ping silencioso para despertar el backend mientras el usuario escribe
+    // Azure App Service free/basic tier se duerme — esto lo despierta antes del login
+    this.http.get(`${environment.apiUrl}/users`, { observe: 'response' }).pipe(
+      timeout(10000),
+      catchError(() => of(null))
+    ).subscribe();
   }
 
   onSubmit(): void {
